@@ -26,6 +26,11 @@ button{font:inherit;font-size:20px;padding:12px 36px;border:0;border-radius:14px
 #pb{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:5;font-size:15px;padding:5px 16px;border-radius:10px;background:var(--panel);color:var(--fg)}
 #pz{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(13,27,42,.78);z-index:4}
 #pz h1{margin:0;font-size:34px;color:var(--accent)}
+#dl{font-size:16px;color:var(--accent)}
+#df{display:flex;gap:10px}
+#df button{font-size:20px;padding:10px 24px;background:var(--panel);color:var(--fg);border:2px solid var(--accent)}
+#df button.on{background:var(--accent);color:#0d1b2a}
+#dd{font-size:14px;opacity:.85}
 .hide{display:none!important}
 </style>
 <meta name="theme-color" content="#0d1b2a">
@@ -48,6 +53,9 @@ button{font:inherit;font-size:20px;padding:12px 36px;border:0;border-radius:14px
 <h1 id="t">지훈&amp;민준 비행</h1>
 <p id="m">자동으로 달리고 자동으로 쏩니다.<br>화면을 좌우로 드래그해서 피하고 좀비를 잡으세요!</p>
 <div id="reg" class="hide"><input id="nm" maxlength="8" placeholder="이름" autocomplete="off"><button id="rg">랭킹 등록</button></div>
+<div id="dl">난이도 선택</div>
+<div id="df"><button data-d="0" class="on">하</button><button data-d="1">중</button><button data-d="2">상</button></div>
+<div id="dd">기본 난이도</div>
 <button id="b">시작</button>
 <div id="rt"></div>
 <ol id="rk"></ol>
@@ -77,7 +85,7 @@ bul.forEach(b=>b.y-=11);bul=bul.filter(b=>b.y>-10);
 const lvl=1+Math.floor(t/600);
 if(fz<=0&&--spawn<=0){spawn=Math.max(18,55-lvl*5)*(score<1000?1/0.9:1);const big=Math.random()<0.2;
 if(Math.random()<0.006)itm.push({x:30+Math.random()*(W-60),y:-20,k:4});if(Math.random()<0.12)itm.push({x:30+Math.random()*(W-60),y:-20,k:(r=>r<0.18?2:r<0.25?4:r<0.4?5:0)(Math.random())});if(!bs)mon.push({x:30+Math.random()*(W-60),y:-30,r:big?26:17,hp:big?5:2,mh:big?5:2,v:(big?1.1:1.8)+0.25,big,kd:Math.floor(Math.random()*3),tp:bgCur==5?1:bgCur==3?2:0,ph:Math.random()*6})}
-if(fz<=0)mon.forEach(m=>{m.y+=m.v*Math.min(1.5,spd*Math.pow(1.05,Math.floor(score/500)))*ms;m.ph+=0.1;m.x+=Math.sin(m.ph)*0.8});
+if(fz<=0)mon.forEach(m=>{m.y+=m.v*(dif?Math.pow(1.2,Math.floor(score/1000))*Math.pow(1.05,Math.floor(score/500)):Math.min(1.5,spd*Math.pow(1.05,Math.floor(score/500))))*[1,1.5,2][dif]*ms;m.ph+=0.1;m.x+=Math.sin(m.ph)*0.8});
 itm.forEach(i=>{i.y+=2.2*spd;if(Math.hypot(i.x-P.x,i.y-P.y)<21+P.r){i.dead=1;sItem();score+=100;boom(i.x,i.y,'#ffd23f');if(i.k==1)ps=Math.min(2,+(ps*1.1).toFixed(3));else if(i.k==2)hp=hp+1;else if(i.k==3)ms=Math.max(0.5,+(ms*0.9).toFixed(3));else if(i.k==4)fz=180;else if(i.k==5)papa();else pw=Math.min(pw+1,15)}});
 itm=itm.filter(i=>!i.dead&&i.y<H+30);
 for(const m of mon){if(m.dead)continue;for(const b of bul){if(b.y<-50)continue;
@@ -217,7 +225,9 @@ ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx0-2,by0-2,bw+4,12);ctx.fillStyle=
 ctx.save();ctx.font='14px Jua,sans-serif';ctx.textAlign='center';ctx.shadowColor='#000';ctx.shadowBlur=4;ctx.fillStyle='#fff';ctx.fillText('남은 총알 '+(bs.max-bs.hit),bs.x,by0+26);ctx.restore()}
 let rz=0.96;
 function spk(x,y){for(let i=0;i<3;i++){const a=Math.PI*(0.1+Math.random()*0.8),s=1.5+Math.random()*2.5;fx.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:14,c:i%2?'#fff':'#ffd23f'})}}
-let hurt=0,sbd=false;
+let hurt=0,sbd=false,dif=0;
+const DD=['기본 난이도','좀비 속도 1.5배 · 속도 상한 없음','좀비 속도 2배 · 속도 상한 없음'];
+document.querySelectorAll('#df button').forEach(b=>b.onclick=()=>{dif=+b.dataset.d;document.querySelectorAll('#df button').forEach(x=>x.classList.toggle('on',x===b));document.getElementById('dd').textContent=DD[dif]});
 cv.addEventListener('pointerup',()=>{sbd=false});cv.addEventListener('pointercancel',()=>{sbd=false});
 function iceBlock(cx,cy,hw,hh){const x=cx-hw,y=cy-hh,w=hw*2,h=hh*2,d=hw*0.35;ctx.save();ctx.globalAlpha=fz<30&&fz%6<3?0.55:1;
 ctx.fillStyle='rgba(150,225,255,0.5)';ctx.fillRect(x,y,w,h);
@@ -305,10 +315,10 @@ async function load(){let list=local;
 if(useDb){try{const s=await db.collection('scores').orderBy('score','desc').limit(10).get();list=s.docs.map(d=>d.data())}catch(e){useDb=false;list=local}}
 rt.textContent=useDb?'전체 랭킹':'내 기기 랭킹';rk.innerHTML='';
 if(!list.length){rk.textContent='아직 기록이 없습니다';return}
-list.slice(0,10).forEach((r,i)=>{const li=document.createElement('li');li.textContent=(i+1)+'. '+r.name+' - '+r.score;rk.appendChild(li)})}
+list.slice(0,10).forEach((r,i)=>{const li=document.createElement('li');li.textContent=(i+1)+'. '+r.name+' - '+r.score+' ['+['하','중','상'][r.d||0]+']';rk.appendChild(li)})}
 rg.onclick=async()=>{const name=(nm.value.trim()||'익명').slice(0,8);rg.disabled=true;reg.classList.add('hide');
 try{localStorage.setItem('nm',name)}catch(e){}
-const rec={name:name,score:lastScore,at:Date.now()};let ok=false;
+const rec={name:name,score:lastScore,at:Date.now(),d:dif};let ok=false;
 if(useDb){try{await db.collection('scores').add(rec);ok=true}catch(e){useDb=false}}
 if(!ok){local.push(rec);local.sort((a,b)=>b.score-a.score);local=local.slice(0,10);try{localStorage.setItem('rk',JSON.stringify(local))}catch(e){}}
 load()};
